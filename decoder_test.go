@@ -11,20 +11,21 @@ import (
 
 // All cases we want to cover, in a nutshell.
 type S1 struct {
-	F01 int     `schema:"f1"`
-	F02 *int    `schema:"f2"`
-	F03 []int   `schema:"f3"`
-	F04 []*int  `schema:"f4"`
-	F05 *[]int  `schema:"f5"`
-	F06 *[]*int `schema:"f6"`
-	F07 S2      `schema:"f7"`
-	F08 *S1     `schema:"f8"`
-	F09 int     `schema:"-"`
-	F10 []S1    `schema:"f10"`
-	F11 []*S1   `schema:"f11"`
-	F12 *[]S1   `schema:"f12"`
-	F13 *[]*S1  `schema:"f13"`
-	F14 int     `schema:"f14"`
+	F01 int               `schema:"f1"`
+	F02 *int              `schema:"f2"`
+	F03 []int             `schema:"f3"`
+	F04 []*int            `schema:"f4"`
+	F05 *[]int            `schema:"f5"`
+	F06 *[]*int           `schema:"f6"`
+	F07 S2                `schema:"f7"`
+	F08 *S1               `schema:"f8"`
+	F09 int               `schema:"-"`
+	F10 []S1              `schema:"f10"`
+	F11 []*S1             `schema:"f11"`
+	F12 *[]S1             `schema:"f12"`
+	F13 *[]*S1            `schema:"f13"`
+	F14 map[string]string `schema:"f14"`
+	F15 map[string]int    `schema:"f15"`
 }
 
 type S2 struct {
@@ -50,7 +51,10 @@ func TestAll(t *testing.T) {
 		"f12.0.f12.1.f6": {"123", "124"},
 		"f13.0.f13.0.f6": {"131", "132"},
 		"f13.0.f13.1.f6": {"133", "134"},
-		"f14":            {},
+		"f14.k141":       {"141"},
+		"f14.k142":       {"142"},
+		"f15.k151":       {"151"},
+		"f15.k152":       {"152"},
 	}
 	f2 := 2
 	f41, f42 := 41, 42
@@ -61,6 +65,8 @@ func TestAll(t *testing.T) {
 	f111, f112, f113, f114 := 111, 112, 113, 114
 	f121, f122, f123, f124 := 121, 122, 123, 124
 	f131, f132, f133, f134 := 131, 132, 133, 134
+	f141, f142 := "141", "142"
+	f151, f152 := 151, 152
 	e := S1{
 		F01: 1,
 		F02: &f2,
@@ -111,10 +117,12 @@ func TestAll(t *testing.T) {
 				},
 			},
 		},
-		F14: 0,
 	}
 
-	s := &S1{}
+	s := &S1{
+		F14: make(map[string]string),
+		F15: make(map[string]int),
+	}
 	_ = NewDecoder().Decode(s, v)
 
 	vals := func(values []*int) []int {
@@ -290,8 +298,23 @@ func TestAll(t *testing.T) {
 			}
 		}
 	}
-	if s.F14 != e.F14 {
-		t.Errorf("f14: expected %v, got %v", e.F14, s.F14)
+	if s.F14 == nil {
+		t.Errorf("f14: got nil")
+	} else if len(s.F14) != 2 {
+		t.Errorf("f14: expected 2 elements, got %v", s.F14)
+	} else if s.F14["k141"] != f141 {
+		t.Errorf("f14.f141: expected %v, got %v", f141, s.F14)
+	} else if s.F14["k142"] != f142 {
+		t.Errorf("f14.f142: expected %v, got %v", f142, s.F14["k142"])
+	}
+	if s.F15 == nil {
+		t.Errorf("f15: got nil")
+	} else if len(s.F15) != 2 {
+		t.Errorf("f15: expected 2 elements, got %v", s.F15)
+	} else if s.F15["k151"] != f151 {
+		t.Errorf("f15.f151: expected %v, got %v", f151, s.F15)
+	} else if s.F15["k152"] != f152 {
+		t.Errorf("f15.f152: expected %v, got %v", f152, s.F15["k152"])
 	}
 }
 
@@ -314,6 +337,10 @@ func BenchmarkAll(b *testing.B) {
 		"f12.0.f12.1.f6": {"123", "124"},
 		"f13.0.f13.0.f6": {"131", "132"},
 		"f13.0.f13.1.f6": {"133", "134"},
+		"f14.k141":       {"141"},
+		"f14.k142":       {"142"},
+		"f15.k151":       {"151"},
+		"f15.k152":       {"152"},
 	}
 
 	b.ResetTimer()
@@ -776,6 +803,8 @@ type S1NT struct {
 	F11 []*S1
 	F12 *[]S1
 	F13 *[]*S1
+	F14 map[string]string
+	F15 map[string]int
 }
 
 func TestAllNT(t *testing.T) {
@@ -797,6 +826,10 @@ func TestAllNT(t *testing.T) {
 		"f12.0.f12.1.f6": {"123", "124"},
 		"f13.0.f13.0.f6": {"131", "132"},
 		"f13.0.f13.1.f6": {"133", "134"},
+		"f14.k141":       {"141"},
+		"f14.k142":       {"142"},
+		"f15.k151":       {"151"},
+		"f15.k152":       {"152"},
 	}
 	f2 := 2
 	f41, f42 := 41, 42
@@ -807,6 +840,9 @@ func TestAllNT(t *testing.T) {
 	f111, f112, f113, f114 := 111, 112, 113, 114
 	f121, f122, f123, f124 := 121, 122, 123, 124
 	f131, f132, f133, f134 := 131, 132, 133, 134
+	f141, f142 := "141", "142"
+	f151, f152 := 151, 152
+
 	e := S1NT{
 		F1: 1,
 		F2: &f2,
@@ -859,7 +895,8 @@ func TestAllNT(t *testing.T) {
 		},
 	}
 
-	s := &S1NT{}
+	s := &S1NT{F14: make(map[string]string),
+		F15: make(map[string]int)}
 	_ = NewDecoder().Decode(s, v)
 
 	vals := func(values []*int) []int {
@@ -1034,6 +1071,24 @@ func TestAllNT(t *testing.T) {
 				}
 			}
 		}
+	}
+	if s.F14 == nil {
+		t.Errorf("f14: got nil")
+	} else if len(s.F14) != 2 {
+		t.Errorf("f14: expected 2 elements, got %v", s.F14)
+	} else if s.F14["k141"] != f141 {
+		t.Errorf("f14.f141: expected %v, got %v", f141, s.F14)
+	} else if s.F14["k142"] != f142 {
+		t.Errorf("f14.f142: expected %v, got %v", f142, s.F14["k142"])
+	}
+	if s.F15 == nil {
+		t.Errorf("f15: got nil")
+	} else if len(s.F15) != 2 {
+		t.Errorf("f15: expected 2 elements, got %v", s.F15)
+	} else if s.F15["k151"] != f151 {
+		t.Errorf("f15.f151: expected %v, got %v", f151, s.F15)
+	} else if s.F15["k152"] != f152 {
+		t.Errorf("f15.f152: expected %v, got %v", f152, s.F15["k152"])
 	}
 }
 

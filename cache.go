@@ -91,6 +91,13 @@ func (c *cache) parsePath(p string, t reflect.Type) ([]pathPart, error) {
 			t = field.typ
 		} else if field.typ.Kind() == reflect.Ptr && field.typ.Elem().Kind() == reflect.Struct {
 			t = field.typ.Elem()
+		} else if field.typ.Kind() == reflect.Map {
+			parts = append(parts, pathPart{
+				path:  path,
+				field: field,
+				index: -1,
+			})
+			return parts, nil
 		}
 	}
 	// Add the remaining.
@@ -146,7 +153,7 @@ func (c *cache) createField(field reflect.StructField, info *structInfo) {
 	}
 	// Check if the type is supported and don't cache it if not.
 	// First let's get the basic type.
-	isSlice, isStruct := false, false
+	isSlice, isStruct, isMap := false, false, false
 	ft := field.Type
 	if ft.Kind() == reflect.Ptr {
 		ft = ft.Elem()
@@ -157,7 +164,11 @@ func (c *cache) createField(field reflect.StructField, info *structInfo) {
 			ft = ft.Elem()
 		}
 	}
-	if isStruct = ft.Kind() == reflect.Struct; !isStruct {
+
+	isMap = ft.Kind() == reflect.Map
+	isStruct = ft.Kind() == reflect.Struct
+
+	if !isMap && !isStruct {
 		if conv := c.conv[ft]; conv == nil {
 			// Type is not supported.
 			return

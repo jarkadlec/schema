@@ -200,6 +200,15 @@ func (d *Decoder) decode(v reflect.Value, path string, parts []pathPart,
 			} else {
 				return ConversionError{path, -1}
 			}
+		} else if conv := d.cache.conv[v.Type().Elem()]; conv != nil && t.Kind() == reflect.Map {
+			k := strings.Split(path, ".")
+			key := reflect.ValueOf(k[len(k)-1])
+
+			if value := conv(val); value.IsValid() {
+				v.SetMapIndex(key, value)
+			} else {
+				return ConversionError{path, -1}
+			}
 		} else {
 			return fmt.Errorf("schema: converter not found for %v", t)
 		}
